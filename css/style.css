@@ -1,0 +1,38 @@
+body {
+	font-family: "HelveticaNeue-Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	margin: 40px auto;
+	width: 90%;
+}
+
+#body {
+	position: relative;
+}
+
+footer {
+	padding: 2em 0 1em 0;
+	font-size: 12px;
+}
+
+h1 {
+	font-size: 48px;
+	margin-top: .3em;
+	margin-bottom: 0;
+}
+
+h1 + h2 {
+	margin-top: 0;
+}
+
+h2 {
+	font-weight: 400;
+	font-size: 28px;
+}
+
+h1, h2 {
+	text-rendering: optimizeLegibility;
+}
+
+body > p {
+	line-height: 1.5em;
+	text-rendering: optimizeLegibility;
+}

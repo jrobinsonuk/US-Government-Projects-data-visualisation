@@ -1,55 +1,67 @@
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
-d3.csv("flights-3m.csv", function(error, flights) {
+d3.csv("data/flights-3m.csv", function(error, projects) {
 
   // Various formatters.
   var formatNumber = d3.format(",d"),
       formatChange = d3.format("+,d"),
+      dateParser = d3.time.format("%B %d, %Y"),
       formatDate = d3.time.format("%B %d, %Y"),
-      formatTime = d3.time.format("%I:%M %p");
+      formatTime = d3.time.format("%I:%M:%S");
 
   // A nest operator, for grouping the flight list.
-  var nestByDate = d3.nest()
-      .key(function(d) { return d3.time.day(d.date); });
+  var nestByDate = d3.nest().key(function(d) { return d3.time.day(d.date); });
 
   // A little coercion, since the CSV is untyped.
-  flights.forEach(function(d, i) {
+  projects.forEach(function(d, i) {
     d.index = i;
-    d.date = parseDate(d.date);
-    d.delay = +d.delay;
-    d.distance = +d.distance;
+    d.startDate = dateParser.parse(d.startDate);
+    d.completionDate = dateParser.parse(d.completionDate);
+    d.plannedProjectCompletionDate = dateParser.parse(d.plannedProjectCompletionDate);
+    d.projectedActualProjectCompletionDate = dateParser.parse(d.projectedActualProjectCompletionDate);
   });
 
   // Create the crossfilter for the relevant dimensions and groups.
-  var flight = crossfilter(flights),
-      all = flight.groupAll(),
-      date = flight.dimension(function(d) { return d.date; }),
-      dates = date.group(d3.time.day),
-      hour = flight.dimension(function(d) { return d.date.getHours() + d.date.getMinutes() / 60; }),
-      hours = hour.group(Math.floor),
-      delay = flight.dimension(function(d) { return Math.max(-60, Math.min(149, d.delay)); }),
-      delays = delay.group(function(d) { return Math.floor(d / 10) * 10; }),
-      distance = flight.dimension(function(d) { return Math.min(1999, d.distance); }),
-      distances = distance.group(function(d) { return Math.floor(d / 50) * 50; });
+  var project = crossfilter(projects),
+      all = project.groupAll(),
+      start = project.dimension(function(d) { return d.startDate; }),
+      starts = start.group(d3.time.day),
+      cost = project.dimension(function(d) { return d.plannedCost; }),
+      costs = cost.group(Math.floor),
+      costVariance = project.dimension(function(d) { return d.costVariancePercent * 100; }),
+      costVariances = costVariance.group(Math.floor),
+      completion = project.dimension(function(d) { return d.plannedCost; }),
+      completions = completion.group(Math.floor),
+      schedule = project.dimension(function(d) { return d.plannedCost; }),
+      schedules = schedule.group(Math.floor);
+
+      //d3.min(start.all())
 
   var charts = [
 
     barChart()
-        .dimension(hour)
-        .group(hours)
+        .dimension(cost)
+        .group(costs)
       .x(d3.scale.linear()
         .domain([0, 24])
         .rangeRound([0, 10 * 24])),
 
     barChart()
-        .dimension(delay)
-        .group(delays)
+        .dimension(costVariance)
+        .group(costVariances)
       .x(d3.scale.linear()
         .domain([-60, 150])
         .rangeRound([0, 10 * 21])),
 
     barChart()
-        .dimension(distance)
-        .group(distances)
+        .dimension(completion)
+        .group(completions)
+      .x(d3.scale.linear()
+        .domain([0, 2000])
+        .rangeRound([0, 10 * 40])),
+
+    barChart()
+        .dimension(completion)
+        .group(completions)
       .x(d3.scale.linear()
         .domain([0, 2000])
         .rangeRound([0, 10 * 40])),
