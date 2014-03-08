@@ -1,40 +1,59 @@
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
-d3.csv("data/flights-3m.csv", function(error, projects) {
+d3.csv("data/projects-1.0.csv", function(error, projects) {
 
   // Various formatters.
   var formatNumber = d3.format(",d"),
       formatChange = d3.format("+,d"),
-      dateParser = d3.time.format("%B %d, %Y"),
+      dateParser = d3.time.format("%d/%m/%Y"),
       formatDate = d3.time.format("%B %d, %Y"),
       formatTime = d3.time.format("%I:%M:%S");
 
   // A nest operator, for grouping the flight list.
-  var nestByDate = d3.nest().key(function(d) { return d3.time.day(d.date); });
+  var nestByDate = d3.nest().key(function(d) { return d3.time.month(d.date); });
 
   // A little coercion, since the CSV is untyped.
+  var projectsRemove = [];
   projects.forEach(function(d, i) {
     d.index = i;
-    d.startDate = dateParser.parse(d.startDate);
-    d.completionDate = dateParser.parse(d.completionDate);
-    d.plannedProjectCompletionDate = dateParser.parse(d.plannedProjectCompletionDate);
-    d.projectedActualProjectCompletionDate = dateParser.parse(d.projectedActualProjectCompletionDate);
+    console.log(i +" - "+ d.startDate);
+    if (d.startDate.length > 0 && d.completionDate.length > 0 && d.plannedProjectCompletionDate.length > 0 && d.projectedActualProjectCompletionDate.lenght > 0) {
+      d.startDate = dateParser.parse(d.startDate);
+      d.completionDate = dateParser.parse(d.completionDate);
+      d.plannedProjectCompletionDate = dateParser.parse(d.plannedProjectCompletionDate);
+      d.projectedActualProjectCompletionDate = dateParser.parse(d.projectedActualProjectCompletionDate);
+    } else {
+      projectsRemove.push(d);
+    }
   });
+
+  // Create a list of agencies
+  var agencies = new Array();
+  projects.forEach(function (p, i) {
+    if (!(agencies.indexOf(p.agencyName) >= 0)) {
+      agencies.push(p.agencyName);
+    }
+  });
+  agencies.sort();
 
   // Create the crossfilter for the relevant dimensions and groups.
   var project = crossfilter(projects),
       all = project.groupAll(),
       start = project.dimension(function(d) { return d.startDate; }),
       starts = start.group(d3.time.day),
+      startsDomain = [starts.bottom(1)[0], starts.top(1)[0]],
       cost = project.dimension(function(d) { return d.plannedCost; }),
       costs = cost.group(Math.floor),
-      costVariance = project.dimension(function(d) { return d.costVariancePercent * 100; }),
+      costsDomain = [costs.bottom(1)[0], costs.top(1)[0]],
+      costVariance = project.dimension(function(d) { return d.costVariancePercent/100.0; }),
       costVariances = costVariance.group(Math.floor),
-      completion = project.dimension(function(d) { return d.plannedCost; }),
-      completions = completion.group(Math.floor),
-      schedule = project.dimension(function(d) { return d.plannedCost; }),
-      schedules = schedule.group(Math.floor);
+      costVariancesDomain = [costVariances.bottom(1)[0], costVariances.top(1)[0]],
+      completion = project.dimension(function(d) { return d.completionDate; }),
+      completions = completion.group(d3.time.day),
+      completionsDomain = [completions.bottom(1)[0], completions.top(1)[0]],
+      schedule = project.dimension(function(d) { return d.scheduleVariancePercent/100.0; }),
+      schedules = schedule.group(Math.floor),
+      schedulesDomain = [schedules.bottom(1)[0], schedules.top(1)[0]];
 
-      //d3.min(start.all())
 
   var charts = [
 
@@ -42,39 +61,37 @@ d3.csv("data/flights-3m.csv", function(error, projects) {
         .dimension(cost)
         .group(costs)
       .x(d3.scale.linear()
-        .domain([0, 24])
-        .rangeRound([0, 10 * 24])),
+        .domain(costsDomain)
+        .rangeRound([0, 10 * (Math.abs(costsDomain[0]) + Math.abs(costsDomain[1]))])),
 
     barChart()
         .dimension(costVariance)
         .group(costVariances)
       .x(d3.scale.linear()
-        .domain([-60, 150])
-        .rangeRound([0, 10 * 21])),
+        .domain(costVariancesDomain)
+        .rangeRound([0, 10 * (Math.abs(costVariancesDomain[0]) + Math.abs(costVariancesDomain[1]))])),
 
     barChart()
         .dimension(completion)
         .group(completions)
       .x(d3.scale.linear()
-        .domain([0, 2000])
-        .rangeRound([0, 10 * 40])),
+        .domain(costsDomain)
+        .rangeRound([0, 10 * (Math.abs(costsDomain[0]) + Math.abs(costsDomain[1]))])),
 
     barChart()
-        .dimension(completion)
-        .group(completions)
+        .dimension(schedule)
+        .group(schedules)
       .x(d3.scale.linear()
-        .domain([0, 2000])
-        .rangeRound([0, 10 * 40])),
+        .domain(schedulesDomain)
+        .rangeRound([0, 10 * (Math.abs(schedulesDomain[0]) + Math.abs(schedulesDomain[1]))])),
 
     barChart()
-        .dimension(date)
-        .group(dates)
+        .dimension(start)
+        .group(starts)
         .round(d3.time.day.round)
       .x(d3.time.scale()
-        .domain([new Date(2001, 0, 1), new Date(2001, 3, 1)])
-        .rangeRound([0, 10 * 90]))
-        .filter([new Date(2001, 1, 1), new Date(2001, 2, 1)])
-
+        .domain(startsDomain)
+        .rangeRound([0, 10 * (Math.abs(startsDomain[0]) + Math.abs(startsDomain[1]))]))
   ];
 
   // Given our array of charts, which we assume are in the same order as the
@@ -86,7 +103,7 @@ d3.csv("data/flights-3m.csv", function(error, projects) {
 
   // Render the initial lists.
   var list = d3.selectAll(".list")
-      .data([flightList]);
+      .data([projectList]);
 
   // Render the total.
   d3.selectAll("#total")
@@ -106,15 +123,6 @@ d3.csv("data/flights-3m.csv", function(error, projects) {
     d3.select("#active").text(formatNumber(all.value()));
   }
 
-  // Like d3.time.format, but faster.
-  function parseDate(d) {
-    return new Date(2001,
-        d.substring(0, 2) - 1,
-        d.substring(2, 4),
-        d.substring(4, 6),
-        d.substring(6, 8));
-  }
-
   window.filter = function(filters) {
     filters.forEach(function(d, i) { charts[i].filter(d); });
     renderAll();
@@ -125,51 +133,47 @@ d3.csv("data/flights-3m.csv", function(error, projects) {
     renderAll();
   };
 
-  function flightList(div) {
-    var flightsByDate = nestByDate.entries(date.top(40));
+  function projectList(div) {
+    var projectMonths = nestByDate.entries(start.top(40));
 
     div.each(function() {
-      var date = d3.select(this).selectAll(".date")
-          .data(flightsByDate, function(d) { return d.key; });
+      var month = d3.select(this).selectAll(".month")
+          .data(projectMonths, function(d) { return d.key; });
 
-      date.enter().append("div")
-          .attr("class", "date")
+      month.enter().append("div")
+          .attr("class", "month")
         .append("div")
           .attr("class", "day")
-          .text(function(d) { return formatDate(d.values[0].date); });
+          .text(function(d) { return formatDate(d.values[0].month); });
 
-      date.exit().remove();
+      month.exit().remove();
 
-      var flight = date.order().selectAll(".flight")
+      var project = start.order().selectAll(".project")
           .data(function(d) { return d.values; }, function(d) { return d.index; });
 
-      var flightEnter = flight.enter().append("div")
-          .attr("class", "flight");
+      var projectEntry = project.enter().append("div")
+          .attr("class", "project");
 
-      flightEnter.append("div")
-          .attr("class", "time")
-          .text(function(d) { return formatTime(d.date); });
+      projectEntry.append("div")
+          .attr("class", "date start")
+          .text(function(d) { return formatTime(d.startDate); });
 
-      flightEnter.append("div")
-          .attr("class", "origin")
-          .text(function(d) { return d.origin; });
+      projectEntry.append("div")
+          .attr("class", "title")
+          .text(function(d) { return d.projectName; });
 
-      flightEnter.append("div")
-          .attr("class", "destination")
-          .text(function(d) { return d.destination; });
+      projectEntry.append("div")
+          .attr("class", "description")
+          .text(function(d) { return d.projectDescription; });
 
-      flightEnter.append("div")
-          .attr("class", "distance")
-          .text(function(d) { return formatNumber(d.distance) + " mi."; });
+      projectEntry.append("div")
+          .attr("class", "agency")
+          .text(function(d) { return d.agencyName; });
 
-      flightEnter.append("div")
-          .attr("class", "delay")
-          .classed("early", function(d) { return d.delay < 0; })
-          .text(function(d) { return formatChange(d.delay) + " min."; });
 
-      flight.exit().remove();
+      project.exit().remove();
 
-      flight.order();
+      project.order();
     });
   }
 
