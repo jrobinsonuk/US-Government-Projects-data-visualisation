@@ -12,7 +12,7 @@
 		<a href="#filter">Filter</a> | <a href="#stats">Statistics</a>
 	</nav>
 
-	<section id="filter">
+	<section id="filter" style="display:none;">
 		<!-- Option 1 -->
 		<h1>Filter</h1>
 		<p>This visualisation provides the flexibility to filter down a specific set of data</p>
@@ -41,7 +41,7 @@
 			</div>
 		</div>
 
-		<aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside>
+		<!-- <aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside> -->
 
 		<div id="lists">
 			<div class="title">Projects</div>
@@ -52,9 +52,15 @@
 
 	<section id="stats">
 		<!-- Option 5 -->
+		<h1>Bubbles</h1>
+
 		<div id="bubbles">
 
 		</div>
+
+		<aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside>
+
+		<div id="back">&lt;Agencies</div>
 
 		<div id="averages">
 			<div class="heading">Averages</div>
@@ -74,6 +80,7 @@
 
 	<script src="js/crossfilter.v1.min.js"></script>
 	<script src="js/d3.v3.min.js"></script>
+	<script src="js/d3-tip.js"></script>
 	<!-- <script src="js/visualisation-filter.js"></script> -->
 	<script src="js/visualisation-bubbles.js"></script>
 
