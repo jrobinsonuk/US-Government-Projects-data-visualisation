@@ -60,7 +60,7 @@
 }
 
 #projects-list {
-  max-height: 1024px;
+  max-height: 400px;
   overflow: auto;
 }
 
