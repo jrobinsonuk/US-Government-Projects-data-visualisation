@@ -1,20 +1,14 @@
-var selectedAgency = null;
-
-var svgSize = {width:1000, height:800};
-
-var svg = d3.select("#bubbles").append("svg")
-							.attr("width", svgSize.width)
-							.attr("height", svgSize.height);
-
-
-var formatNumber = d3.format(",d");
-
-
-
-
-
 d3.csv("data/projects-1.0.csv", function(error, projects) {
 	// Projects loaded. We have an array as 'projects'
+
+
+	var svgSize = {width:1000, height:800},
+		formatNumber = d3.format(",d"),
+		selectedAgency = null;
+
+	var svg = d3.select("#bubbles").append("svg")
+								.attr("width", svgSize.width)
+								.attr("height", svgSize.height);
 
 
 	// Gather information about agencies
@@ -112,7 +106,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 			var node = svg.selectAll(".node")
 							.data(force.nodes())
 					        .attr("class", "node")
-					        .enter().append("g")
+				        .enter().append("g")
 					        .call(force.drag)
 					        .on("click", agencyClick)
 					        .on('mouseover', tip.show)
