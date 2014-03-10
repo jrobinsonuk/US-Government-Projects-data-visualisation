@@ -2,7 +2,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 	// Projects loaded. We have an array as 'projects'
 
 
-	var svgSize = {width:1000, height:800},
+	var svgSize = {width:1000, height:760},
 		formatNumber = d3.format(",d"),
 		selectedAgency = null;
 
@@ -130,16 +130,59 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 			var agencyProjects = projects.filter(function (project) {
 				return (project.agencyCode == selectedAgency.code);
-			});
+			}),
+				unsuitableProjects = new Array();
 
+			var totalCost = 0,
+				minimumCost = 0,
+				maximumCost = 0;
+			agencyProjects.forEach(function (project, i) {
+				project.index = i;
+
+				if ((""+project.plannedCost).length == 0) {
+					unsuitableProjects.push(project);
+				} else {
+					project.plannedCost = parseFloat(project.plannedCost);
+				
+					totalCost += project.plannedCost;
+					if (minimumCost == 0 || project.plannedCost < minimumCost) {
+						minimumCost = project.plannedCost;
+					}
+					if (maximumCost == 0 || project.plannedCost > maximumCost) {
+						maximumCost = project.plannedCost;
+					}
+				}
+			});
+			if (unsuitableProjects.length > 0) {
+				var removedCount = 0;
+				unsuitableProjects.forEach(function (project) {
+					agencyProjects.splice(project.index - removedCount, 1);
+				});
+			}
+
+
+
+			var pixelToCost = 1,
+				averageCost = totalCost/agencyProjects.length,
+				scale = 1;
+			console.log("min " + minimumCost);
+			console.log("max " + maximumCost);
+			console.log("tot " + totalCost);
+			console.log("avg " + averageCost)
+			console.log("p1 " + totalCost/1000);
+
+			if (maximumCost > 200) {
+				scale = (agencyProjects.length/2)/maximumCost;
+				console.log("scale = "+ scale);
+			}
 
 			// Update existing stuff
 			force.nodes(agencyProjects)
-					.charge(function(d, i) {return 15 * (-10); })
+					.charge(function(d, i) { return d.plannedCost * scale * (-12); })
 					.start();
 
 			tip.html(function (d) {
-				return '<strong>' + d.projectName + '</strong>';
+				return d.projectName; //'<strong>' + d.projectName + '</strong>';
 			});
 
 
@@ -153,7 +196,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 							.on('mouseout', tip.hide);
 
 			node.append("circle")
-					.attr("r", function (d, i) { return 15; })
+					.attr("r", function (d, i) { return d.plannedCost * scale; })
 					.style("fill", "#ff0000")
 					.style("stroke", "#000000");
 
