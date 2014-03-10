@@ -59,38 +59,41 @@
   width: 920px;
 }
 
-#flight-list {
-  min-height: 1024px;
+#projects-list {
+  max-height: 1024px;
+  overflow: auto;
 }
 
-#flight-list .date,
-#flight-list .day {
+#projects-list .date,
+#projects-list .day {
   margin-bottom: .4em;
 }
 
-#flight-list .flight {
+#projects-list .project {
   line-height: 1.5em;
   background: #eee;
-  width: 640px;
+  width: 1240px;
   margin-bottom: 1px;
 }
 
-#flight-list .time {
+#projects-list .time {
   color: #999;
 }
 
-#flight-list .flight div {
+#projects-list .project div {
   display: inline-block;
-  width: 100px;
+  width: 300px;
+  max-height: 50px;
+  overflow: hidden;
 }
 
-#flight-list div.distance,
-#flight-list div.delay {
+#projects-list div.distance,
+#projects-list div.delay {
   width: 160px;
   padding-right: 10px;
   text-align: right;
 }
 
-#flight-list .early {
+#projects-list .early {
   color: green;
 }

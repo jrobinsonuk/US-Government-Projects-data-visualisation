@@ -157,6 +157,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 				var removedCount = 0;
 				unsuitableProjects.forEach(function (project) {
 					agencyProjects.splice(project.index - removedCount, 1);
+					removedCount++;
 				});
 			}
 

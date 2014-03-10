@@ -9,22 +9,31 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
       formatTime = d3.time.format("%I:%M:%S");
 
   // A nest operator, for grouping the flight list.
-  var nestByDate = d3.nest().key(function(d) { return d3.time.month(d.date); });
+  var nestByDate = d3.nest().key(function(d) { return d3.time.month(d.startDate); });
 
   // A little coercion, since the CSV is untyped.
   var projectsRemove = [];
   projects.forEach(function(d, i) {
     d.index = i;
-    console.log(i +" - "+ d.startDate);
-    if (d.startDate.length > 0 && d.completionDate.length > 0 && d.plannedProjectCompletionDate.length > 0 && d.projectedActualProjectCompletionDate.lenght > 0) {
+    if ((""+d.startDate).length > 0 && (""+d.completionDate).length > 0) {
       d.startDate = dateParser.parse(d.startDate);
       d.completionDate = dateParser.parse(d.completionDate);
-      d.plannedProjectCompletionDate = dateParser.parse(d.plannedProjectCompletionDate);
-      d.projectedActualProjectCompletionDate = dateParser.parse(d.projectedActualProjectCompletionDate);
     } else {
+      console.log("remove " + d.projectName);
       projectsRemove.push(d);
     }
   });
+  if (projectsRemove.length > 0) {
+    // Remove the projects we planned to remove
+    var removedCount = 0;
+    projectsRemove.forEach(function (project) {
+      projects.splice(project.index - removedCount, 1);
+      console.log("remove at index" + project.index + "count "+ removedCount);
+      removedCount++;
+    });
+  }
+
+
 
   // Create a list of agencies
   var agencies = new Array();
@@ -38,21 +47,15 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
   // Create the crossfilter for the relevant dimensions and groups.
   var project = crossfilter(projects),
       all = project.groupAll(),
-      start = project.dimension(function(d) { return d.startDate; }),
+      start = project.dimension(function(d, i) { return d.startDate; }), // console.log("index: " + i + " - " + d.startDate + " - " + d.projectName);
       starts = start.group(d3.time.day),
-      startsDomain = [starts.bottom(1)[0], starts.top(1)[0]],
+      startsDomain = [new Date(2000,1,1), new Date(2020,10,10)],
       cost = project.dimension(function(d) { return d.plannedCost; }),
       costs = cost.group(Math.floor),
-      costsDomain = [costs.bottom(1)[0], costs.top(1)[0]],
-      costVariance = project.dimension(function(d) { return d.costVariancePercent/100.0; }),
-      costVariances = costVariance.group(Math.floor),
-      costVariancesDomain = [costVariances.bottom(1)[0], costVariances.top(1)[0]],
-      completion = project.dimension(function(d) { return d.completionDate; }),
+      costsDomain = [0, 2000],
+      completion = project.dimension(function(d, i) { return d.completionDate; }), //  console.log("index: " + i + " - " + d.completionDate + " - " + d.projectName);
       completions = completion.group(d3.time.day),
-      completionsDomain = [completions.bottom(1)[0], completions.top(1)[0]],
-      schedule = project.dimension(function(d) { return d.scheduleVariancePercent/100.0; }),
-      schedules = schedule.group(Math.floor),
-      schedulesDomain = [schedules.bottom(1)[0], schedules.top(1)[0]];
+      completionsDomain = [new Date(2009,1,1), new Date(2021,10,10)];
 
 
   var charts = [
@@ -62,28 +65,15 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
         .group(costs)
       .x(d3.scale.linear()
         .domain(costsDomain)
-        .rangeRound([0, 10 * (Math.abs(costsDomain[0]) + Math.abs(costsDomain[1]))])),
-
-    barChart()
-        .dimension(costVariance)
-        .group(costVariances)
-      .x(d3.scale.linear()
-        .domain(costVariancesDomain)
-        .rangeRound([0, 10 * (Math.abs(costVariancesDomain[0]) + Math.abs(costVariancesDomain[1]))])),
+        .rangeRound([0, 10 * 90])),
 
     barChart()
         .dimension(completion)
         .group(completions)
-      .x(d3.scale.linear()
-        .domain(costsDomain)
-        .rangeRound([0, 10 * (Math.abs(costsDomain[0]) + Math.abs(costsDomain[1]))])),
-
-    barChart()
-        .dimension(schedule)
-        .group(schedules)
-      .x(d3.scale.linear()
-        .domain(schedulesDomain)
-        .rangeRound([0, 10 * (Math.abs(schedulesDomain[0]) + Math.abs(schedulesDomain[1]))])),
+        .round(d3.time.day.round)
+      .x(d3.time.scale()
+        .domain(completionsDomain)
+        .rangeRound([0, 10 * 90])),
 
     barChart()
         .dimension(start)
@@ -91,7 +81,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
         .round(d3.time.day.round)
       .x(d3.time.scale()
         .domain(startsDomain)
-        .rangeRound([0, 10 * (Math.abs(startsDomain[0]) + Math.abs(startsDomain[1]))]))
+        .rangeRound([0, 10 * 90]))
   ];
 
   // Given our array of charts, which we assume are in the same order as the
@@ -107,7 +97,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
   // Render the total.
   d3.selectAll("#total")
-      .text(formatNumber(flight.size()));
+      .text(formatNumber(project.size()));
 
   renderAll();
 
@@ -134,46 +124,64 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
   };
 
   function projectList(div) {
-    var projectMonths = nestByDate.entries(start.top(40));
+    // var projectMonths = nestByDate.entries(start.top(40));
 
     div.each(function() {
-      var month = d3.select(this).selectAll(".month")
-          .data(projectMonths, function(d) { return d.key; });
+      // var month = d3.select(this).selectAll(".month")
+      //     .data(projectMonths, function(d) { console.log("month "+ d.key); return d.key; });
 
-      month.enter().append("div")
-          .attr("class", "month")
-        .append("div")
-          .attr("class", "day")
-          .text(function(d) { return formatDate(d.values[0].month); });
+      // month.enter().append("div")
+      //     .attr("class", "month")
+      //   .append("div")
+      //     .attr("class", "day")
+      //     .text(function(d) { return formatDate(d.values[0].month); });
 
-      month.exit().remove();
+      // month.exit().remove();
+    //   console.log(all);
 
-      var project = start.order().selectAll(".project")
-          .data(function(d) { return d.values; }, function(d) { return d.index; });
+    //   var project = d3.select("#projects-list").selectAll(".project").data(all, function(d) { return d.values; })
+    //       // .data(function(d) { return d.values; }, function(d) { return d.index; });
 
-      var projectEntry = project.enter().append("div")
-          .attr("class", "project");
+    //   var projectEntry = project.enter().append("div")
+    //       .attr("class", "project");
 
-      projectEntry.append("div")
-          .attr("class", "date start")
-          .text(function(d) { return formatTime(d.startDate); });
+    //   projectEntry.append("div")
+    //       .attr("class", "date start")
+    //       .text(function(d) { return formatDate(d.startDate); });
 
-      projectEntry.append("div")
-          .attr("class", "title")
-          .text(function(d) { return d.projectName; });
+    //   projectEntry.append("div")
+    //       .attr("class", "title")
+    //       .text(function(d) { return d.projectName; });
 
-      projectEntry.append("div")
-          .attr("class", "description")
-          .text(function(d) { return d.projectDescription; });
+    //   projectEntry.append("div")
+    //       .attr("class", "description")
+    //       .text(function(d) { return d.projectDescription; });
 
-      projectEntry.append("div")
-          .attr("class", "agency")
-          .text(function(d) { return d.agencyName; });
+    //   projectEntry.append("div")
+    //       .attr("class", "agency")
+    //       .text(function(d) { return d.agencyName; });
 
 
-      project.exit().remove();
+    //   project.exit().remove();
 
-      project.order();
+    //   project.order();
+    console.log("all rc = "+ JSON.stringify(start.top(10)));
+
+      var datapoints = d3.select(this).selectAll(".project").data(start.top(Infinity));
+
+      var dpE = datapoints.enter().append("div").attr("class", "project");
+
+      dpE.append("div")
+        .attr("class", "name")
+        .text(function (d) { return d.projectName; });
+
+      dpE.append("div")
+        .attr("class", "date start")
+        .text(function (d) { return formatDate(d.startDate); });
+
+      datapoints.exit().remove();
+      datapoints.order();
+
     });
   }
 
