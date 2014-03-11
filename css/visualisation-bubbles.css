@@ -1,0 +1,29 @@
+.d3-tip {
+	font-weight: normal;
+}
+
+.d3-tip .title {
+	/*font-weight: bold;*/
+	margin-bottom: 5px;
+	font-weight: bold;
+}
+
+.d3-tip .description {
+	margin-bottom: 5px;
+	font-size: 12px;
+	max-width: 400px;
+}
+
+.d3-tip .detail {
+	font-size: 12px;
+	line-height: 1.5em;
+}
+
+.d3-tip .detail span {
+	font-style: italic;
+	padding-right: 8px;
+}
+
+.d3-tip hr {
+	border-bottom: 0px 0px 1px 0px thin dashed #eeeeee;
+}

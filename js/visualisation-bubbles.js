@@ -4,6 +4,9 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 	var svgSize = {width:1000, height:760},
 		formatNumber = d3.format(",d"),
+		formatDate = d3.time.format("%d %B %Y"),
+		formatCurrencyFormatter = d3.format(",.2f"),
+		formatPercent = d3.format(".2p"),
 		selectedAgency = null;
 
 	var svg = d3.select("#bubbles").append("svg")
@@ -22,7 +25,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 		var agency = null;
 		if (foundAgency.length == 0) {
 			// Add agency
-			agency = {"name":p.agencyName, "code":p.agencyCode, "projectCount":0, "costMoreCount":0, "costLessCount":0, "scheduleMoreCount":0, "scheduleLessCount":0}
+			agency = {"name":p.agencyName, "code":p.agencyCode, "projectCount":0, "totalPlannedCost":0, "totalActualCost":0, "costMoreCount":0, "costLessCount":0, "scheduleMoreCount":0, "scheduleLessCount":0}
 			agencies.push(agency);
 		} else {
 			// Agency existed
@@ -31,19 +34,23 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 		// Update agency summary info
 		agency.projectCount += 1;
-
-		if (p.costVariance == 0) {
-		} else if (p.costVariance > 0) {
-			agency.costMoreCount += 1;
-		} else {
-			agency.costLessCount += 1;
+		if ((""+p.plannedCost).length > 0) {
+			agency.totalPlannedCost += parseFloat(p.plannedCost);
+		}
+		if ((""+p.projectedActualCost).length > 0) {
+			agency.totalActualCost += parseFloat(p.projectedActualCost);
 		}
 
-		if (p.scheduleVariance == 0) {
-		} else if (p.scheduleVariance > 0) {
-			agency.scheduleMoreCount += 1;
-		} else {
+		if (p.costVariancePercent > 0) {
+			agency.costLessCount += 1;
+		} else if (p.costVariancePercent < 0) {
+			agency.costMoreCount += 1;
+		}
+
+		if (p.scheduleVariancePercent > 0) {
 			agency.scheduleLessCount += 1;
+		} else if (p.scheduleVariancePercent < 0) {
+			agency.scheduleMoreCount += 1;
 		}
 	});
 
@@ -98,7 +105,16 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 					.start();
 
 			tip.html(function (d) {
-				return '<strong>' + d.name + '</strong>';
+				return '<div class="title">' + d.name + '</div>' +
+						'<div class="detail"><span>Projects:</span>' + d.projectCount + '</div>' +
+						'<hr />' +
+						'<div class="detail"><span>Total spent:</span>' + formatCurrency(d.totalActualCost) + ' (' + formatCurrency(d.totalPlannedCost) + ' planned)</div>' +
+						'<div class="detail"><span>Total overspent:</span>' + d3.round((((d.totalActualCost - d.totalPlannedCost)/d.totalPlannedCost)*100), 2) + '%</div>' +
+						'<div class="detail"><span>Projects overspent:</span>' + d3.round(((d.costMoreCount/d.projectCount)*100), 2) + '%</div>' +
+						'<div class="detail"><span>Projects underspent:</span>' + d3.round(((d.costLessCount/d.projectCount)*100), 2) + '%</div>' +
+						'<hr />' +
+						'<div class="detail"><span>Completed on time:</span>' + d3.round((((d.projectCount - d.scheduleMoreCount)/d.projectCount)*100), 2) + '%</div>' +
+						'';
 			});
 
 
@@ -183,7 +199,22 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 					.start();
 
 			tip.html(function (d) {
-				return d.projectName; //'<strong>' + d.projectName + '</strong>';
+				var html = '<div class="title">' + d.projectName + '</div>' +
+						'<div class="description">' + d.projectDescription + '</div>' +
+						'<div class="detail"><span>Investment:</span>' + d.investmentTitle + '</div>' +
+						'<hr />' +
+						'<div class="detail"><span>Start:</span>' + d.startDate + '</div>' +
+						'<div class="detail"><span>Completion:</span>' + d.completionDate + '</div>';
+				if (d.plannedProjectCompletionDate) {
+					html += '<div class="detail"><span>Planned completion:</span>' + d.plannedProjectCompletionDate + '</div>';
+				}
+				html += '<hr />' +
+						'<div class="detail"><span>Projected cost spend:</span>' + formatCurrency(d.projectedActualCost) + ' </div>' +
+						'<div class="detail"><span>Projected cost:</span>' + formatCurrency(d.plannedCost) + ' </div>' +
+						'<div class="detail"><span>Cost variance:</span>' + d.costVariancePercent + '%</div>' +
+						'';
+
+				return html;
 			});
 
 
@@ -220,6 +251,10 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 			selectedAgency = d;
 			drawVisualisaton();
 	    }
+
+	    function formatCurrency(value) {
+			return "$" + formatCurrencyFormatter(value) + "m";
+		}
 
 	}
 
