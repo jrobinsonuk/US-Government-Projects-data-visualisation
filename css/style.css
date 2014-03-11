@@ -4,10 +4,6 @@ body {
 	width: 90%;
 }
 
-#body {
-	position: relative;
-}
-
 footer {
 	padding: 2em 0 1em 0;
 	font-size: 12px;
@@ -19,7 +15,7 @@ h1 {
 	margin-bottom: 0;
 }
 
-h1 + h2 {
+h1 + h2 + h3 {
 	margin-top: 0;
 }
 
@@ -28,48 +24,41 @@ h2 {
 	font-size: 28px;
 }
 
-h1, h2 {
+h1, h2, h3 {
 	text-rendering: optimizeLegibility;
 }
 
-body > p {
+h3 {
+	font-size: 14px;
+	font-weight: 400;
+	color: #666666;
+}
+
+section > p {
 	line-height: 1.5em;
 	text-rendering: optimizeLegibility;
+	width: 70%;
+}
+
+aside {
+  position: absolute;
+  margin-left: 820px;
+  font-size: smaller;
+  width: 220px;
+  text-align: right;
 }
 
 
-#back {
-	color: #0000ff;
-	cursor: pointer;
+nav {
+	font-size: 20px;
+	color: #111111;
 }
 
-
-
-.d3-tip {
-	line-height: 1;
-	font-weight: bold;
-	padding: 12px;
-	background: rgba(0, 0, 0, 0.8);
-	color: #fff;
-	border-radius: 2px;
+nav a {
+	color: #666666;
+	text-decoration: none;
 }
 
-.d3-tip:after {
-	/* Creates a small triangle extender for the tooltip */
-	box-sizing: border-box;
-	display: inline;
-	font-size: 10px;
-	width: 100%;
-	line-height: 1;
-	color: rgba(0, 0, 0, 0.8);
-	content: "\25BC";
-	position: absolute;
-	text-align: center;
-}
-
-.d3-tip.n:after {
-	/* Style northward tooltips differently */
-	margin: -1px 0 0 0;
-	top: 100%;
-	left: 0;
+nav a.selected {
+	color: #111111;
 }

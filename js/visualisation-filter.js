@@ -133,7 +133,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
   };
 
   function projectList(div) {
-    var projectList = nestByAgency.entries(agency.bottom(40 * projectListStep)); // d3.select(this).selectAll(".project").data(start.top(40 * projectListStep));
+    var projectList = nestByAgency.entries(agency.bottom(30 * projectListStep)); // d3.select(this).selectAll(".project").data(start.top(40 * projectListStep));
 
 
     div.each(function(d, i) {

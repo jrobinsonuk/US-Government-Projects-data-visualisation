@@ -1,0 +1,137 @@
+Rich Internet Applications - Coursework 1
+=========================================
+
+
+1. Installing the visualisations
+
+A live demonstration of the visualisations can be found at http://users.ecs.soton.ac.uk/info6005_cw1 or http://jdr.name/university/info6005_cw1
+
+Github repository: https://github.com/jrobinsonuk/US-Government-Projects-data-visualisation
+
+
+Installing the visualisations is as simple as downloading the visualisation and uploading it to a system running Apache. It can be run on a network without internet connection as Javascript libraries and CSS files are stored in the 'js/' and 'css/' folders respectively. The visualisations use relative referencing. Data files are included in the 'data/' folder.
+
+Included Javascript frameworks
+ - d3js (http://d3js.org)
+ - Crossfilter (https://github.com/square/crossfilter)
+ - d3-tip (https://github.com/Caged/d3-tip)
+
+
+Using different data sources:
+Variables in data are referenced using dot notation. To use a newer version of the original dataset, the column rows need to be updated to match those used by the system. The columns are:
+
+uid	bcid	agencyCode	agencyName	investmentTitle	pid	agencyPid	projectName	projectDescription	startDate	completionDate	plannedProjectCompletionDate	projectedActualProjectCompletionDate	lifecycleCost	scheduleVariance	scheduleVariancePercent	costVariance	costVariancePercent	plannedCost	projectedActualCost	updatedDate	updatedTime	upid
+	
+
+
+
+
+2. Data Cleaning
+
+A combination of tools were used to identify errors with the data set and then resolve them. The primary tool used was Google Refine (http://www.openrefine.org) and Microsoft Excel.
+
+Excel allowed a nice, easy representation of the csv file to be rendered which allowed easy visualisation of the data and therefore identification of the error.
+
+Errors type:
+	1 	Error type: Invalid format
+		Examples:	row 1 - 2012-30-09 should be in format dd/mm/yyyy
+		Identified: visually through Microsoft Excel. Confirmed in reading csv in data format
+		Resolved:	Using the formatting options in Microsoft Excel resolved the issue. This was confimed by visual checks. A text facet in Google Refine also confirmed all instances of this were removed
+		Handled:	Values are parsed for the dates in the crossfilter visualisation. Incorrect rows are ignored
+
+	2 	Error type: Units included
+		Examples:	row 22 - 2.306 ($m) should not contain '($m)'
+		Identified: visually through Microsoft Excel. Confirmed in reading the plain csv file
+		Resolved:	A find and replace in the specific column was performed identifying "($m)" and replacing it with ""
+		Handled:	Values are parsed for numeric values in the visualisation
+
+	3	Error type: Equivalent values for 'Agency Name'
+		Examples:	"Department of Agraculture", "Department of Agriculture ", "DoA", "Agriculture Department"
+		Identified: Although they could be visually identified in Excel and the plain csv, Google Refine identified all variations that were similar.
+		Resolved: Used Google Refine to cluster and replace similar phrases for the agency name. Review the ambiguous groups by reading into the other details (e.g. 'Agency Code') to identify correct agency.
+
+	4 	Error type: Invalid data 
+		Examples:	row 173 is a 'total' summary row that does not contain data
+		Identified: Through Excel and verified in plain csv file
+		Resolved: 	Find and replace on all rows containing "Total" at start 
+		Handled:	The visualisations ignore any rows that do not contain the required data.
+
+	5 	Error type: Data offsets
+		Examples:	rows 174-448 start with an offset of 5 columns as row is pre-appended with ",,,,," rather than being appended to the line
+		Identified: Through Excel and verified in plain csv file
+		Resolved:	Deleted ",,,,," pre-appended to some of the rows directly in csv file. This also revealed that trailing columns existed that shouldn't be there. To resolve this, 
+		Handled:	Values are parsed for parts of the visualisation (dates and numbers primarily)
+
+	6 	Error type: Empty rows
+		Examples:	Commonly after a 'total' row there was an empty row with no data.
+		Identified: When running a facet in Google Refine on 'Agency Name', "(blank)" rows were identified.
+		Resolved:	I filtered the records to the "(blank)" facet and selected "Remove all matching rows"
+		Handled:	The visualisations ignore any rows that do not contain the required data.
+
+	7 	Error type: Invalid constraints
+		Examples:	'Unique Project ID' contains duplicate values meaning the value is not unique. e.g. many rows of data with id = "1"
+		Identified: This can clearly be seen when doing a text or numeric facet in Google Refine or just browsing the column in Excel
+		Resolved:	Was found to be the original data set so perhaps the title is not well explained
+
+	7 	Error type: Incorrect referencing
+		Examples:	2 of the rows with "Department of Agriculture" as the 'Agency Name' had 'Agency Code' = 6, whilst all the others had 5
+		Identified: Reviewing alterations made in Google Refine identified the error
+		Resolved:	Filtered the agency name to "Department of Agriculture" and replaced the cells with "6" with "5" and applied it to all 'Agency Code' cells in the filtered list
+
+	8	Error type: Embedded separators
+		Examples:	Project with 'Project Name'="HME Comparability". 'Agency Project ID' had a comma to format the data. In CSV file this creates a new column. There were multiple occurrences in this
+		Identified: Reviewing the dataset in Excel, some of the rows were an extra column wide but contained full data. This implied that there was an additional separator.
+		Resolved:	Manually removing occurrences of embedded separators by reviewing the data in Microsoft Excel.
+
+	9	Error type: Forecast/duplicate rows
+		Examples:	'Project Name' "Time and Labor Modernization (TLM)" has multiple referecnes. Some of the data is blank as the years are for forecasts.
+		Identified:	Reviewing the data set in excel
+		Resolved:	They have been left in the original dataset, but have been ignored in visualisations as they contain insufficient useful data
+		Handled:	Data that was missing for records was identified at runtime and not included in the data for the visualisation if required fields did not exist
+
+	10	Error type:	Possible miss-input of data
+		Examples:	30/09/2018, 15/08/2048
+		Identified:	Google Refine was able to identify them as well as the crossfilter visualisation I created.
+		Resolved:	It was difficult to tell if the dates were valid or not, but a decision could be made using the schedule variance, planned actual completion dates and planned costs.
+		Handled:	The majority were left due to uncertainty and could be represented in the visualisations. The crossfilter was affected the most as it meant that the scale was reduced to handle the range of dates making filtering a bit less accurate
+
+
+
+	Some duplicate agencies had different codes so these were corrected (e.g. there were two instances of DoA had code 6, else 5. Department of Agriculture was code 5)
+	
+
+
+
+
+3. Visualisations
+
+3.1 Bubbles
+
+This visualisation provides a visual representation for comparison of agencies and projects. A 'bubble' can be 'dragged' around the canvas and the slight transparency of each 'bubble' means that visualisations can be overlaid for direct comparison between two rows of data. Hovering your mouse over the 'bubble' provides a breakdown of the data.
+
+The top level, of the visualisation, is the set of agencies found in the project dataset. The size of each 'bubble' is representative to the number of projects funded by that agency. The colour of the 'bubble' provides a visual representation of the agency's total spending in the familiar "traffic light" structure. Green signifies that the total project costs were less than the total planned project costs. Amber signifies that the total costs matched each other. Red signifies that the total costs were more than the planned costs. Clicking on a 'bubble' takes you to the visualisation of the projects for the selected agency. The deeper the shade of the background, the more significant the difference between costs is.
+
+The second level, of the visualisation, is the set of projects that belong to the selected agency. The size of the 'bubble' represents the Projected Actual Cost of the project. Similarly to the top layer, the colour of the 'bubble' is a queue for the variance in project cost. Green signifies that there is a positive variance (the Projected Actual Cost is less than the Planned Cost). Amber signifies that the variance was zero matched each other. Red signifies a negative variance (the Projected Actual Cost is more than the Planned Cost). The deeper the shade of the background, the more significant the variance is.
+
+This visualisation provides a simple, clear, visual comparison of the records in the dataset. It provides interactivity through the ability to drag the 'bubbles' around the canvas, which provides an opportunity to adapt the layout of the data to suit the user's visual comparison. The collision detection between 'bubbles' also provides the user with some "fun" interactivity to maintain engagement. The hover interactivity enables the user to see in-depth information about the data 'bubble'; even the small ones.
+
+This visualisation is suitable as it allows users to directly compare using visual perception and daily interaction of the traffic light system. It allows them to delve into an agency's projects
+
+
+3.2 Crossfilter
+
+This visualisation provides the flexibility to filter down to a specific set of data. Filtering can be done based on the Start Date, Completion Date and Planned Project Cost.
+		
+A list of projects that match the criteria can be found at the bottom of the page. The list is categorised by agency alphabetically. The Completion Date and Project Completion Cost are highlighted based on their variances from the plan. If the value at completion is greater than the planned (negative variance), the text is coloured red as a visual queue that it has exceeded the plan which is not a good thing. If the value at completion is less than the planned (positive variance), the text is coloured green as a visual queue that the value is under-budget which is a positive feature.
+
+This visualisation is suitable for anyone who wishes to find out more information about project between a specific range. For instance it provides the opportunity to compare the budgetary changes since the presidential campaign. It also allows the user to identify extremities in data through the bar charts and then view more specific details in the list of filtered projects. It allows trends to be easily identified through the bar charts. Users interact with the visualisation by dragging over one of the bar chart filters. Upon this interaction, all bar charts update to show the the relevant filtered results; and so too does the project list at the bottom of the page.
+
+This visualisation is suitable for the intended use case because it provides a lot of flexibility and interactivity. The user is able to list the projects that they are interested in. It could be improved by actually allowing textual input which would aid User Experience on mobile devices.
+
+
+
+4. Additional notes
+
+In order to improve the User Experience (UX) for the crossfilter, only 30 records are initially rendered when a filter is changed. When the user scrolls through the list and reaches the bottom, the next set of 30 records are rendered and so on until there are no more records to render. This prevents the significant delays that would occur if the system had to render all 2400+ unfiltered projects. 
+
+In order to improve the load time when a transition is made between a project and the agencies overview, the agency details and statistics is extracted from the project dataset at visualisation launch so it only has to calculate the statistics and iterate through all the project records once. Additional optimisation is made at point of filtering by using the agency code to create a subset of projects rather than doing a string comparison on the agency name of a project.

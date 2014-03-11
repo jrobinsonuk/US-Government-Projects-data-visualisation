@@ -8,12 +8,24 @@
 </head>
 
 <body>
+	<nav>
+		<a href="index.html">Bubbles</a> | <a href="filter.html" class="selected">Crossfilter</a>
+	</nav>
+
 
 	<section id="filter">
 		<!-- Option 1 -->
-		<h1>Filter</h1>
-		<p>This visualisation provides the flexibility to filter down a specific set of data</p>
+		<h1>Crossfilter</h1>
+		<h3>by James Robinson (jdr1g10)</h3>
+		
 		<p>Inspiration and base for code from <a href="http://square.github.io/crossfilter/" target="_blank">Square</a>. This visualisation uses the <a href="http://d3js.org" target="_blank">d3</a> and <a href="https://github.com/square/crossfilter" target="_blank">crossfilter</a> libraries.</p>
+
+		<p>This visualisation provides the flexibility to filter down to a specific set of data. Filtering can be done based on the <em>Start Date</em>, <em>Completion Date</em> and <em>Planned Project Cost</em>.</p>
+		
+		<p>A list of projects that match the criteria can be found at the bottom of the page. The list is categorised by agency alphabetically. The <em>Completion Date</em> and <em>Project Completion Cost</em> are highlighted based on their variances from the plan. If the value at completion is greater than the planned (negative variance), the text is coloured red as a visual queue that it has exceeded the plan which is not a good thing. If the value at completion is less than the planned (positive variance), the text is coloured green as a visual queue that the value is under-budget which is a positive feature.</p>
+		
+		<p>This visualisation is suitable for anyone who wishes to find out more information about project between a specific range. For instance it provides the opportunity to compare the budgetary changes since the presidential campaign. It also allows the user to identify extremities in data through the bar charts and then view more specific details in the list of filtered projects. It allows trends to be easily identified through the bar charts. Users interact with the visualisation by dragging over one of the bar chart filters. Upon this interaction, all bar charts update to show the the relevant filtered results; and so too does the project list at the bottom of the page.</p>
+
 
 		<div id="charts">
 			<div id="cost-chart" class="chart">
@@ -30,7 +42,6 @@
 		<aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside>
 
 		<div id="lists">
-			<!-- <div class="title">Projects</div> -->
 			<div class="project-header">
 				<div class="name">Project</div>
 				<div class="date start">Start Date</div>

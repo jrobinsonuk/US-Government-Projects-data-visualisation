@@ -4,85 +4,44 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>US Government Projects data visualisation</title>
 	<link rel="stylesheet" type="text/css" href="css/style.css">
-	<link rel="stylesheet" type="text/css" href="css/visualisation-filter.css">
 	<link rel="stylesheet" type="text/css" href="css/visualisation-bubbles.css">
 </head>
 
 <body>
 	<nav>
-		<a href="#filter">Filter</a> | <a href="#stats">Statistics</a>
+		<a href="index.html" class="selected">Bubbles</a> | <a href="filter.html">Crossfilter</a>
 	</nav>
-
-	<section id="filter" style="display:none;">
-		<!-- Option 1 -->
-		<h1>Filter</h1>
-		<p>This visualisation provides the flexibility to filter down a specific set of data</p>
-		<p>Inspiration and base for code from <a href="http://square.github.io/crossfilter/" target="_blank">Square</a>. This visualisation uses the <a href="http://d3js.org" target="_blank">d3</a> and <a href="https://github.com/square/crossfilter" target="_blank">crossfilter</a> libraries.</p>
-
-		<div id="charts">
-			<div id="cost-chart" class="chart">
-				<div class="title">Planned Project Cost ($m)</div>
-			</div>
-			<div id="cost_variance-chart" class="chart">
-				<div class="title">Cost Variance (%)</div>
-			</div>
-			<div id="completion_date-chart" class="chart">
-				<div class="title">Completion Date</div>
-				<label><input type="checkbox" id="completion_date-checkbox">Use planned</label>
-			</div>
-			<div id="delay-chart" class="chart">
-				<div class="title">Schedule Variance (%)</div>
-			</div>
-			<div id="department-options" class="options">
-				<div class="title">Department</div>
-			</div>
-
-			<div id="start_date-chart" class="chart">
-				<div class="title">Start Date</div>
-			</div>
-		</div>
-
-		<!-- <aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside> -->
-
-		<div id="lists">
-			<div class="title">Projects</div>
-			<div id="projects-list" class="list"></div>
-		</div>
-	</section>
 
 
 	<section id="stats">
 		<!-- Option 5 -->
 		<h1>Bubbles</h1>
+		<h3>by James Robinson (jdr1g10)</h3>
+
+		<p>This visualisation uses the <a href="http://d3js.org" target="_blank">d3</a> library for the rendering of the visualisation and the <a href="https://github.com/Caged/d3-tip" target="_blank">d3-tip</a> library to present the detailed information presented in the bubble.</p>
+
+		<p>This visualisation provides a visual representation for comparison of agencies and projects. A 'bubble' can be 'dragged' around the canvas and the slight transparency of each 'bubble' means that visualisations can be overlaid for direct comparison between two rows of data. Hovering your mouse over the 'bubble' provides a breakdown of the data.</p>
+
+		<p>The top level, of the visualisation, is the set of <strong>agencies</strong> found in the project dataset. The size of each 'bubble' is representative to the <em>number of projects</em> funded by that agency. The colour of the 'bubble' provides a visual representation of the agency's total spending in the familiar "traffic light" structure. <em>Green</em> signifies that the total project costs were <em>less</em> than the total planned project costs. <em>Amber</em> signifies that the total costs matched each other. <em>Red</em> signifies that the total costs were <em>more</em> than the planned costs. Clicking on a 'bubble' takes you to the visualisation of the projects for the selected agency. The deeper the shade of the background, the more significant the difference between costs is.</p>
+
+		<p>The second level, of the visualisation, is the set of <strong>projects</strong> that belong to the selected agency. The size of the 'bubble' represents the <em>Projected Actual Cost</em> of the project. Similarly to the top layer, the colour of the 'bubble' is a queue for the variance in project cost. <em>Green</em> signifies that there is a positive variance (the <em>Projected Actual Cost</em> is <em>less</em> than the <em>Planned Cost</em>). <em>Amber</em> signifies that the variance was <em>zero</em> matched each other. <em>Red</em> signifies a negative variance (the <em>Projected Actual Cost</em> is <em>more</em> than the <em>Planned Cost</em>). The deeper the shade of the background, the more significant the variance is.</p>
+
+		<p>This visualisation provides a simple, clear, visual comparison of the records in the dataset. It provides interactivity through the ability to drag the 'bubbles' around the canvas, which provides an opportunity to adapt the layout of the data to suit the user's visual comparison. The collision detection between 'bubbles' also provides the user with some "fun" interactivity to maintain engagement. The hover interactivity enables the user to see in-depth information about the data 'bubble'; even the small ones.</p>
+
 
 		<div id="bubbles">
 
 		</div>
 
-		<aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside>
-
 		<div id="back">&lt;Agencies</div>
 
-		<div id="averages">
-			<div class="heading">Averages</div>
-			<div id="cost-bar" class="bar stats-cost">
-				<div class="title">Cost</div>
-			</div>
-			<div id="time-bar" class="bar stats-time">
-				<div class="title">Time</div>
-			</div>
-			<div id="completion-bar" class="bar stats-time">
-				<div class="title">Projects completed</div>
-			</div>
-		</div>
+		<aside id="totals"><span id="active">-</span> of <span id="total">-</span> projects.</aside>
 	</section>
 	
 
 
-	<script src="js/crossfilter.v1.min.js"></script>
 	<script src="js/d3.v3.min.js"></script>
 	<script src="js/d3-tip.js"></script>
-	<!-- <script src="js/visualisation-filter.js"></script> -->
 	<script src="js/visualisation-bubbles.js"></script>
 
 </body>

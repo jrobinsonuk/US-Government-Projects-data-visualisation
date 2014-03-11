@@ -211,7 +211,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 			// Update existing stuff
 			force.nodes(agencyProjects)
-					.charge(function (d) { return radiusScale(d.plannedCost) * (-7); })
+					.charge(function (d) { return radiusScale((d.projectedActualCost)? d.projectedActualCost : d.plannedCost)  * (-7); })
 					.start();
 
 			tip.html(function (d) {
@@ -244,7 +244,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 							.on('mouseout', tip.hide);
 
 			node.append("circle")
-					.attr("r", function (d) { return radiusScale(d.plannedCost); })
+					.attr("r", function (d) { return radiusScale((d.projectedActualCost)? d.projectedActualCost : d.plannedCost); })
 					.style("fill", function (d) { return circleFill(d.costVariancePercent); })
 					.style("stroke", "#666666");
 

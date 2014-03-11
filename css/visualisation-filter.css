@@ -120,11 +120,3 @@
 #projects-list .negative {
   color: #ff0000;
 }
-
-aside {
-  position: absolute;
-  margin-left: 820px;
-  font-size: smaller;
-  width: 220px;
-  text-align: right;
-}
