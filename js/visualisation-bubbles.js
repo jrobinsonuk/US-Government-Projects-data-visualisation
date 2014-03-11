@@ -2,7 +2,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 	// Projects loaded. We have an array as 'projects'
 
 
-	var svgSize = {width:1000, height:820},
+	var svgSize = {width:1000, height:1000},
 		formatNumber = d3.format(",d"),
 		formatDate = d3.time.format("%d %B %Y"),
 		formatCurrencyFormatter = d3.format(",.2f"),
@@ -117,7 +117,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 			// Update existing stuff
 			force.nodes(agencies)
-					.charge(function (d) {return radiusScale(d.projectCount) * (-10); })
+					.charge(function (d) {return radiusScale(d.projectCount) * (-11); })
 					.start();
 
 			tip.html(function (d) {
@@ -211,7 +211,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 			// Update existing stuff
 			force.nodes(agencyProjects)
-					.charge(function (d) { return radiusScale(d.plannedCost) * (-8); })
+					.charge(function (d) { return radiusScale(d.plannedCost) * (-7); })
 					.start();
 
 			tip.html(function (d) {
@@ -283,7 +283,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 				var b = validateColorValue(30 * percent, 40);
 				return "rgba(" + r + ",238," + b +", 0.9)";
 			}
-			return "rgba(255,150,10,0.9)";
+			return "rgba(255,200,115,0.9)";
 
 
 			function validateColorValue(value, max) {
