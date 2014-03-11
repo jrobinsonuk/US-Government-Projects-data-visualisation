@@ -2,7 +2,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 	// Projects loaded. We have an array as 'projects'
 
 
-	var svgSize = {width:1000, height:760},
+	var svgSize = {width:1000, height:820},
 		formatNumber = d3.format(",d"),
 		formatDate = d3.time.format("%d %B %Y"),
 		formatCurrencyFormatter = d3.format(",.2f"),
@@ -81,6 +81,8 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 		svg.selectAll('circle').remove();
 
 		// Prepare to add data
+		var radiusScale = d3.scale.pow().exponent(0.3);
+
 		var force = d3.layout.force()
 				        .size([svgSize.width, svgSize.height])
 				        .linkDistance(10)
@@ -99,9 +101,23 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 			// summary stats for all agencies are put into progress bars
 
 
+			// Calculate data for circle
+			var minimumPC = 0,
+				maximumPC = 0;
+			agencies.forEach(function (d) {
+				if (minimumPC == 0 || d.projectCount < minimumPC) {
+					minimumPC = d.projectCount;
+				}
+				if (d.projectCount > maximumPC) {
+					maximumPC = d.projectCount;
+				}
+			})
+			radiusScale.domain([minimumPC, maximumPC]).range([3, 60]);
+
+
 			// Update existing stuff
 			force.nodes(agencies)
-					.charge(function(d, i) {return d.projectCount/5.0 * (-10); })
+					.charge(function (d) {return radiusScale(d.projectCount) * (-10); })
 					.start();
 
 			tip.html(function (d) {
@@ -117,7 +133,6 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 						'';
 			});
 
-
 			// Create nodes
 			var node = svg.selectAll(".node")
 							.data(force.nodes())
@@ -129,9 +144,9 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 							.on('mouseout', tip.hide);
 
 			node.append("circle")
-					.attr("r", function (d, i) { return d.projectCount/5; })
+					.attr("r", function (d, i) { return radiusScale(d.projectCount); })
 					.style("fill", function (d) { return circleFill((((d.totalActualCost - d.totalPlannedCost)/d.totalPlannedCost)*100)); })
-					.style("stroke", "#333333");
+					.style("stroke", "#666666");
 
 
 			d3.select("body").select("#active").text(formatNumber(projects.length));
@@ -164,7 +179,7 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 					if (minimumCost == 0 || project.plannedCost < minimumCost) {
 						minimumCost = project.plannedCost;
 					}
-					if (maximumCost == 0 || project.plannedCost > maximumCost) {
+					if (project.plannedCost > maximumCost) {
 						maximumCost = project.plannedCost;
 					}
 				}
@@ -176,26 +191,27 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 					removedCount++;
 				});
 			}
+			radiusScale.domain([minimumCost, maximumCost]).range([1, 40]);
 
 
 
-			var pixelToCost = 1,
-				averageCost = totalCost/agencyProjects.length,
-				scale = 1;
-			console.log("min " + minimumCost);
-			console.log("max " + maximumCost);
-			console.log("tot " + totalCost);
-			console.log("avg " + averageCost)
-			console.log("p1 " + totalCost/1000);
+			// var pixelToCost = 1,
+			// 	averageCost = totalCost/agencyProjects.length,
+			// 	scale = 1;
+			// console.log("min " + minimumCost);
+			// console.log("max " + maximumCost);
+			// console.log("tot " + totalCost);
+			// console.log("avg " + averageCost)
+			// console.log("p1 " + totalCost/1000);
 
-			if (maximumCost > 200) {
-				scale = (agencyProjects.length/2)/maximumCost;
-				console.log("scale = "+ scale);
-			}
+			// if (maximumCost > 200) {
+			// 	scale = (agencyProjects.length/2)/maximumCost;
+			// 	console.log("scale = "+ scale);
+			// }
 
 			// Update existing stuff
 			force.nodes(agencyProjects)
-					.charge(function(d, i) { return d.plannedCost * scale * (-12); })
+					.charge(function (d) { return radiusScale(d.plannedCost) * (-8); })
 					.start();
 
 			tip.html(function (d) {
@@ -228,9 +244,9 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 							.on('mouseout', tip.hide);
 
 			node.append("circle")
-					.attr("r", function (d) { return d.plannedCost * scale; })
+					.attr("r", function (d) { return radiusScale(d.plannedCost); })
 					.style("fill", function (d) { return circleFill(d.costVariancePercent); })
-					.style("stroke", "#333333");
+					.style("stroke", "#666666");
 
 
 			d3.select("body").select("#active").text(formatNumber(agencyProjects.length));
@@ -257,26 +273,25 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 		}
 
 		function circleFill(value) {
-			var percent = 1 - (value/100.0); // make percentage into decimal
-			console.log("percent" + percent);
+			var percent = 1 - (Math.abs(value)/100.0); // make percentage into decimal
 
 			if (value < 0) {
-				var gb = validateColorValue(90 * percent);
+				var gb = validateColorValue(90 * percent, 100);
 				return "rgba(255," + gb + "," + gb +", 0.9)";
 			} else if (value > 0) {
-				var r = validateColorValue(100 * percent);
-				var b = validateColorValue(30 * percent);
+				var r = validateColorValue(100 * percent, 110);
+				var b = validateColorValue(30 * percent, 40);
 				return "rgba(" + r + ",238," + b +", 0.9)";
 			}
 			return "rgba(255,150,10,0.9)";
 
 
-			function validateColorValue(value) {
+			function validateColorValue(value, max) {
 				value = Math.floor(value);
 				if (value < 0) {
 					return 0;
-				} else if (value > 255) {
-					return 255;
+				} else if (value > max) {
+					return max;
 				}
 				return value;
 			}
