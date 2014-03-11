@@ -130,8 +130,8 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 			node.append("circle")
 					.attr("r", function (d, i) { return d.projectCount/5; })
-					.style("fill", "#ff00ff")
-					.style("stroke", "#000000");
+					.style("fill", function (d) { return circleFill((((d.totalActualCost - d.totalPlannedCost)/d.totalPlannedCost)*100)); })
+					.style("stroke", "#333333");
 
 
 			d3.select("body").select("#active").text(formatNumber(projects.length));
@@ -228,9 +228,9 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 							.on('mouseout', tip.hide);
 
 			node.append("circle")
-					.attr("r", function (d, i) { return d.plannedCost * scale; })
-					.style("fill", "#ff0000")
-					.style("stroke", "#000000");
+					.attr("r", function (d) { return d.plannedCost * scale; })
+					.style("fill", function (d) { return circleFill(d.costVariancePercent); })
+					.style("stroke", "#333333");
 
 
 			d3.select("body").select("#active").text(formatNumber(agencyProjects.length));
@@ -254,6 +254,32 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
 	    function formatCurrency(value) {
 			return "$" + formatCurrencyFormatter(value) + "m";
+		}
+
+		function circleFill(value) {
+			var percent = 1 - (value/100.0); // make percentage into decimal
+			console.log("percent" + percent);
+
+			if (value < 0) {
+				var gb = validateColorValue(90 * percent);
+				return "rgba(255," + gb + "," + gb +", 0.9)";
+			} else if (value > 0) {
+				var r = validateColorValue(100 * percent);
+				var b = validateColorValue(30 * percent);
+				return "rgba(" + r + ",238," + b +", 0.9)";
+			}
+			return "rgba(255,150,10,0.9)";
+
+
+			function validateColorValue(value) {
+				value = Math.floor(value);
+				if (value < 0) {
+					return 0;
+				} else if (value > 255) {
+					return 255;
+				}
+				return value;
+			}
 		}
 
 	}
