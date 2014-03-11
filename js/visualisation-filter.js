@@ -3,10 +3,11 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
 
   // Various formatters.
   var formatNumber = d3.format(",d"),
-      formatChange = d3.format("+,d"),
       dateParser = d3.time.format("%d/%m/%Y"),
-      formatDate = d3.time.format("%B %d, %Y"),
-      formatTime = d3.time.format("%I:%M:%S");
+      formatDate = d3.time.format("%d %B %Y"),
+      formatCurrencyFormatter = d3.format(",.##");
+
+  var nestByAgency = d3.nest().key(function (d) { return d.agencyName; });
 
   var projectListStep = 1;
 
@@ -44,20 +45,19 @@ d3.csv("data/projects-1.0.csv", function(error, projects) {
   // Create the crossfilter for the relevant dimensions and groups.
   var project = crossfilter(projects),
       all = project.groupAll(),
-      start = project.dimension(function(d, i) { return d.startDate; }),
+      agency = project.dimension(function (d) { return d.agencyName; }),
+      start = project.dimension(function (d) { return d.startDate; }),
       starts = start.group(d3.time.day),
       startsDomain = [d3.time.month.offset(start.bottom(1)[0].startDate, -6), d3.time.month.offset(start.top(1)[0].startDate, 6)],
-      cost = project.dimension(function(d) { console.log("planned "+ d.plannedCost + " - " + d.projectName); return parseFloat(d.plannedCost); }),
+      cost = project.dimension(function (d) { return parseFloat(d.plannedCost); }),
       costs = cost.group(),
       costsDomain = [0, Math.ceil(cost.top(1)[0].plannedCost) * 1.05],
-      completion = project.dimension(function(d, i) { return d.completionDate; }),
+      completion = project.dimension(function (d) { return d.completionDate; }),
       completions = completion.group(d3.time.day),
-      completionsDomain = [new Date(2009,1,1), new Date(2021,10,10)];
+      completionsDomain = [d3.time.month.offset(completion.bottom(1)[0].completionDate, -6), d3.time.month.offset(completion.top(1)[0].completionDate, 6)];
 
-console.log(cost.top(1)[0].plannedCost +" vs "+ cost.bottom(1)[0].plannedCost)
 
   var charts = [
-
     barChart()
         .dimension(cost)
         .group(costs)
@@ -66,19 +66,19 @@ console.log(cost.top(1)[0].plannedCost +" vs "+ cost.bottom(1)[0].plannedCost)
         .rangeRound([0, 1000])),
 
     barChart()
-        .dimension(completion)
-        .group(completions)
-        .round(d3.time.day.round)
-      .x(d3.time.scale()
-        .domain(completionsDomain)
-        .rangeRound([0, 1000])),
-
-    barChart()
         .dimension(start)
         .group(starts)
         .round(d3.time.day.round)
       .x(d3.time.scale()
         .domain(startsDomain)
+        .rangeRound([0, 1000])),
+
+    barChart()
+        .dimension(completion)
+        .group(completions)
+        .round(d3.time.day.round)
+      .x(d3.time.scale()
+        .domain(completionsDomain)
         .rangeRound([0, 1000]))
   ];
 
@@ -118,6 +118,7 @@ console.log(cost.top(1)[0].plannedCost +" vs "+ cost.bottom(1)[0].plannedCost)
     projectListStep = 1;
     chart.each(render);
     list.each(render);
+    d3.select(".list")[0][0].scrollTop = 0;
     d3.select("#active").text(formatNumber(all.value()));
   }
 
@@ -132,22 +133,74 @@ console.log(cost.top(1)[0].plannedCost +" vs "+ cost.bottom(1)[0].plannedCost)
   };
 
   function projectList(div) {
-    div.each(function() {
-      var datapoints = d3.select(this).selectAll(".project").data(start.top(40 * projectListStep));
+    var projectList = nestByAgency.entries(agency.bottom(40 * projectListStep)); // d3.select(this).selectAll(".project").data(start.top(40 * projectListStep));
 
-      var dpE = datapoints.enter().append("div").attr("class", "project");
 
-      dpE.append("div")
+    div.each(function(d, i) {
+      // Agency title first
+      var agency = d3.select(this).selectAll(".agency")
+                              .data(projectList, function (d) { return d.key; });
+
+      agency.enter().append("div")
+                  .attr("class", "agency")
+                .append("div")
+                  .attr("class", "name")
+                  .text(function (d) { return d.values[0].agencyName; });
+
+      agency.exit().remove();
+
+
+      // Go through projects belonging to agency & render row
+      var projectListItem = agency.order().selectAll(".project")
+                                        .data(function (d) { return d.values; }, function (d) { return d.index; });
+
+      var projectListElem = projectListItem.enter().append("div")
+                                                .attr("class", "project");
+
+      projectListElem.append("div")
         .attr("class", "name")
         .text(function (d) { return d.projectName; });
 
-      dpE.append("div")
+      projectListElem.append("div")
         .attr("class", "date start")
         .text(function (d) { return formatDate(d.startDate); });
 
-      datapoints.exit().remove();
-      datapoints.order();
+      projectListElem.append("div")
+        .attr("class", function (d) { return "date completion " + classForVariance(d.scheduleVariancePercent); })
+        .text(function (d) { return formatDate(d.completionDate); });
 
+      projectListElem.append("div")
+        .attr("class", "cost planned")
+        .text(function (d) { return formatCurrency(d.plannedCost); });
+
+      projectListElem.append("div")
+        .attr("class", function (d) { return "cost completion " + classForVariance(d.costVariancePercent); })
+        .text(function (d) { return formatCurrency(d.projectedActualCost); });
+
+      // projectListElem.append("div")
+      //   .attr("class", "date completion")
+      //   .text(function (d) { return formatCurrency(d.projectedActualCost); });
+
+      projectListItem.exit().remove();
+      projectListItem.order();
+
+
+
+
+
+      function formatCurrency(value) {
+        return "$" + formatCurrencyFormatter(value) + "m";
+      }
+
+      function classForVariance(variance) {
+        variance = parseFloat(variance);
+        if (variance > 0) {
+          return "positive";
+        } else if (variance < 0) {
+          return "negative";
+        }
+        return "";
+      }
     });
   }
 

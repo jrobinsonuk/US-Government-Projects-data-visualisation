@@ -59,41 +59,72 @@
   width: 920px;
 }
 
+#lists .project-header {
+  line-height: 1.5em;
+  width: 1040px;
+  margin: 15px 0px 1px 0px;
+  font-weight: bold;
+}
+
 #projects-list {
   max-height: 400px;
   overflow: auto;
 }
 
-#projects-list .date,
-#projects-list .day {
-  margin-bottom: .4em;
+#projects-list .agency {
+  line-height: 1.5em;
+  margin: 7px 0px 2px 0px;
+}
+
+#projects-list .agency > .name {
+  font-style: italic;
 }
 
 #projects-list .project {
   line-height: 1.5em;
-  background: #eee;
-  width: 1240px;
+  background: #efefef;
+  width: 1040px;
   margin-bottom: 1px;
+  font-size: 14px;
 }
 
-#projects-list .time {
-  color: #999;
+#projects-list .project:hover {
+  background: #dddddd;
 }
 
-#projects-list .project div {
-  display: inline-block;
-  width: 300px;
+#projects-list .project div, #lists .project-header div {
+  display: table-cell;
+  width: 200px;
   max-height: 50px;
   overflow: hidden;
+  vertical-align: middle;;
+  padding-right: 4px;
 }
 
-#projects-list div.distance,
-#projects-list div.delay {
-  width: 160px;
-  padding-right: 10px;
+#projects-list .name, #lists .project-header .name {
+  width: 360px !important;
+}
+
+#projects-list .date, #lists .project-header .date {
+  width: 180px !important;
+}
+
+#projects-list .cost, #lists .project-header .cost {
+  width: 150px !important;
+}
+
+#projects-list .positive {
+  color: #14d100; //6aac2b
+}
+
+#projects-list .negative {
+  color: #ff0000;
+}
+
+aside {
+  position: absolute;
+  margin-left: 820px;
+  font-size: smaller;
+  width: 220px;
   text-align: right;
-}
-
-#projects-list .early {
-  color: green;
 }
